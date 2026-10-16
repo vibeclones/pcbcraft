@@ -1,0 +1,84 @@
+name: Build upstream snapshot
+
+on:
+  schedule:
+    - cron: "41 8 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency: build
+
+env:
+  UP: tangency-labs/pcbcraft
+  APP: pcbcraft
+  WEBDIR: apps/pcbcraft-web
+  BRANCH: main
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  TRUNK_VERSION: v0.21.14
+  TRUNK_SHA256: f2b4680cd239693a646a2795e4633c625328d7b2a044fbe749fa3a2fe9e7036b
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find the upstream snapshot
+        run: |
+          read -r sha date < <(gh api "repos/$UP/commits/$BRANCH" --jq '[.sha, .commit.committer.date] | @tsv')
+          d="${date:0:10}"
+          VER="${d//-/.}-${sha:0:7}"
+          echo "VER=$VER" >> "$GITHUB_ENV"
+          echo "SHA=$sha" >> "$GITHUB_ENV"
+          if [ -d "v$VER" ]; then echo "HAVE=true" >> "$GITHUB_ENV"; fi
+          echo "Snapshot $VER"
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: env.HAVE != 'true'
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install Trunk
+        if: env.HAVE != 'true'
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sSfL -o trunk.tar.gz "https://github.com/trunk-rs/trunk/releases/download/${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz"
+          echo "${TRUNK_SHA256}  trunk.tar.gz" | sha256sum -c -
+          tar -xzf trunk.tar.gz -C "$HOME/.local/bin"
+          rm trunk.tar.gz
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Build
+        if: env.HAVE != 'true'
+        run: |
+          git clone --quiet "https://github.com/$UP.git" up
+          git -C up checkout --quiet "$SHA"
+          (cd "up/$WEBDIR" && trunk build --release --public-url ./ --dist "$GITHUB_WORKSPACE/out")
+          mkdir "v$VER"
+          cp -a out/. "v$VER/"
+          cp up/LICENSE* "v$VER/" 2>/dev/null || true
+          printf 'Built from %s at commit %s\nhttps://github.com/%s/tree/%s\n' "$UP" "$SHA" "$UP" "$SHA" > "v$VER/SOURCE.txt"
+          rm -rf up out
+          mkdir -p latest
+          printf '<!doctype html><meta charset="utf-8"><title>%s</title><meta http-equiv="refresh" content="0; url=../v%s/"><link rel="canonical" href="../v%s/"><a href="../v%s/">Open %s</a>\n' "$APP" "$VER" "$VER" "$VER" "$APP" > latest/index.html
+          [ -f versions.json ] || echo '{}' > versions.json
+          jq --arg v "$VER" '{latest: $v, versions: ([$v] + ((.versions // []) - [$v]))}' versions.json > versions.tmp
+          mv versions.tmp versions.json
+          cat versions.json
+
+      - name: Commit and request a Pages build
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing new"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Snapshot $VER"
+          git push
+          gh api -X POST "repos/${{ github.repository }}/pages/builds"
