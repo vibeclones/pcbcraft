@@ -1,0 +1,3 @@
+Built from tangency-labs/pcbcraft at commit 31138579e5ce1c9d9ba4ee1f83f9253581c1c689
+https://github.com/tangency-labs/pcbcraft/tree/31138579e5ce1c9d9ba4ee1f83f9253581c1c689
+Built with wasm-opt disabled (data-wasm-opt="0"); no other changes.
