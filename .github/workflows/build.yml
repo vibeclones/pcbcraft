@@ -57,11 +57,13 @@ jobs:
         run: |
           git clone --quiet "https://github.com/$UP.git" up
           git -C up checkout --quiet "$SHA"
+          # Upstream's default wasm-opt step rejects current Rust output (bulk memory); skip optimizing.
+          sed -i 's|<link data-trunk rel="rust">|<link data-trunk rel="rust" data-wasm-opt="0">|' "up/$WEBDIR/index.html"
           (cd "up/$WEBDIR" && trunk build --release --public-url ./ --dist "$GITHUB_WORKSPACE/out")
           mkdir "v$VER"
           cp -a out/. "v$VER/"
           cp up/LICENSE* "v$VER/" 2>/dev/null || true
-          printf 'Built from %s at commit %s\nhttps://github.com/%s/tree/%s\n' "$UP" "$SHA" "$UP" "$SHA" > "v$VER/SOURCE.txt"
+          printf 'Built from %s at commit %s\nhttps://github.com/%s/tree/%s\nBuilt with wasm-opt disabled (data-wasm-opt="0"); no other changes.\n' "$UP" "$SHA" "$UP" "$SHA" > "v$VER/SOURCE.txt"
           rm -rf up out
           mkdir -p latest
           printf '<!doctype html><meta charset="utf-8"><title>%s</title><meta http-equiv="refresh" content="0; url=../v%s/"><link rel="canonical" href="../v%s/"><a href="../v%s/">Open %s</a>\n' "$APP" "$VER" "$VER" "$VER" "$APP" > latest/index.html
