@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>PCBCraft</title>
+  <meta name="description" content="Electronics design that feels like KiCad, built for people and agents to work on the same board.">
+  <meta name="theme-color" content="#272b34">
+  
+<script type="module">
+import init, * as bindings from './pcbcraft-web-5c318d2debde5df1.js';
+const wasm = await init({ module_or_path: './pcbcraft-web-5c318d2debde5df1_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script>
+  
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #272b34; }
+    #pcbcraft_canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    #pcbcraft_loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: #dee2e8; font: 14px system-ui, sans-serif; background: #272b34; z-index: 10; }
+  </style>
+<link rel="modulepreload" href="./pcbcraft-web-5c318d2debde5df1.js" crossorigin="anonymous" integrity="sha384-U0ec5pnoLyAsPWZT3E2tBcVo8pnoGP43eMvFeNP7kK+UbZRzK2jmUYPvkIhCPZBO"><link rel="modulepreload" href="./snippets/pcbcraft-app-d6d1aa9afffa7270/inline2.js" crossorigin="anonymous" integrity="sha384-H+yZvJJvpKvyMfODC4lR0zrQsLmSi9ENLNWyjhrH+qmI9/lgLgZenUmlDy3nQJ/E"><link rel="modulepreload" href="./snippets/pcbcraft-app-d6d1aa9afffa7270/inline1.js" crossorigin="anonymous" integrity="sha384-HVz+OH0GbFRPd1peSwKxan7qd9fq8qHDwsYF2iIasmkEANLuY2PMhDYhktbQvd3L"><link rel="modulepreload" href="./snippets/pcbcraft-app-d6d1aa9afffa7270/inline3.js" crossorigin="anonymous" integrity="sha384-828ty25s9v1LHZEIYDugVY70H1Hyd9DxFqx9FEBCdITgtdyYns97aaIsy+HWbJKa"><link rel="modulepreload" href="./snippets/pcbcraft-app-d6d1aa9afffa7270/inline0.js" crossorigin="anonymous" integrity="sha384-Byi7I47PJhd+oqQpPvqZzuSjSZKZTGSoO00pHu9sKFIkcSflrbsUsEwi2zSMI5LB"><link rel="preload" href="./pcbcraft-web-5c318d2debde5df1_bg.wasm" crossorigin="anonymous" integrity="sha384-aBVlbRqUg4AjYzPE/AmKGYkLFCmDEXv6QHLwtexyuZFu7F0KHxbrX/BHxdcPe2Wq" as="fetch" type="application/wasm"></head>
+<body>
+  <canvas id="pcbcraft_canvas"></canvas>
+  <div id="pcbcraft_loading" role="status">Loading PCBCraft&hellip;</div>
+</body>
+</html>

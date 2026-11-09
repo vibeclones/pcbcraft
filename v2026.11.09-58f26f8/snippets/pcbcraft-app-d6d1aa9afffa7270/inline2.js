@@ -1,0 +1,3 @@
+
+export function pickSetupProfile(){return new Promise((resolve,reject)=>{const input=document.createElement('input');input.type='file';input.accept='.json';input.oncancel=()=>resolve(null);input.onchange=async()=>{try{const file=input.files[0];if(!file)return resolve(null);if(file.size>1048576)throw new Error('Setup profile exceeds 1 MiB.');resolve(await file.arrayBuffer());}catch(error){reject(error);}};input.click();});}
+export function downloadSetupProfile(bytes,name){const url=URL.createObjectURL(new Blob([bytes],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
