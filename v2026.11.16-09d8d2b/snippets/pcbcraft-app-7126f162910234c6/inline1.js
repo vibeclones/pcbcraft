@@ -1,0 +1,1 @@
+export function checker_now() { return performance.now(); }
